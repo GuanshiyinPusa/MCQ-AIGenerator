@@ -10,7 +10,7 @@
 
 #### 5. Inside VSCode, Open Terminal from the Menu at the top
 ![Alt text](image.png)
-- Check if python is downloaded, use the following command:
+- Check if python is downloaded, use the following command: (in some PC, they use py3 --version, or py --version)
 ```
 python3 --version
 ```
