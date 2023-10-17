@@ -10,7 +10,14 @@
 
 #### 5. Inside VSCode, Open Terminal from the Menu at the top
 ![Alt text](image.png)
-
+- Check if python is downloaded, use the following command:
+```
+python3 --version
+```
+or 
+```
+python --version
+```
 #### 6. Run this to install every package. All the packages are the latest. Copy the code in the code block then right click the terminal, it will be pasted.
 ```
 pip install -r requirements.txt
