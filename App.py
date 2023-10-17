@@ -5,7 +5,7 @@ import json
 from streamlit_js_eval import streamlit_js_eval
 
 def load_environment():
-    openai.api_key = openai_api_key = st.secrets["openai"]["api_key"]
+    openai.api_key = openai_api_key = st.secrets["api_key"]
 
 def initialize_streamlit():
     st.title("Quiz Generator🤖")
