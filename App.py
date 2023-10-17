@@ -2,15 +2,13 @@ import streamlit as st
 from PyPDF2 import PdfReader
 import openai
 import json
-import os
-from dotenv import load_dotenv
+from streamlit_js_eval import streamlit_js_eval
 
 def load_environment():
-    load_dotenv()
-    openai.api_key = os.environ["OPENAI_API_KEY"]
+    openai.api_key = "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"
 
 def initialize_streamlit():
-    st.title("My Own ChatGPT!🤖")
+    st.title("Quiz Generator🤖")
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "model" not in st.session_state:
@@ -19,9 +17,10 @@ def initialize_streamlit():
         st.session_state.response_content = ""
 
 def display_previous_messages():
-    for message in st.session_state["messages"]:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # for message in st.session_state["messages"]:
+    #     with st.chat_message(message["role"]):
+    #         st.markdown(message["content"])
+    return
 
 def get_user_input(num_questions):
     fixed_prompt = """
@@ -54,13 +53,9 @@ def chat_with_gpt(user_input):
     # Check if user message is already in session state to prevent adding it again
     if not any(msg["role"] == "user" and msg["content"] == user_input for msg in st.session_state.messages):
         st.session_state.messages.append({"role": "user", "content": user_input})
-        with st.chat_message("user"):
-            st.markdown(user_input)
 
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
+    with st.spinner('Generating questions...'):
         full_response = ""
-
         for response in openai.ChatCompletion.create(
             model=st.session_state.model,
             messages=[
@@ -70,19 +65,23 @@ def chat_with_gpt(user_input):
             stream=True,
         ):
             full_response += response.choices[0].delta.get("content", "")
-            message_placeholder.markdown(full_response + "▌")
 
-        message_placeholder.markdown(full_response)
+    # Check if assistant message is already in session state to prevent adding it again
+    if not any(msg["role"] == "assistant" and msg["content"] == full_response for msg in st.session_state.messages):
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-        # Check if assistant message is already in session state to prevent adding it again
-        if not any(msg["role"] == "assistant" and msg["content"] == full_response for msg in st.session_state.messages):
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
-    
-    return full_response
+    return full_response  # Assuming you want to return the full response for further processing
 
 def parse_content(content):
-    # Parse the JSON content
-    questions_json = json.loads(content)
+    # Print content to the console for inspection
+    print(content)
+
+    try:
+        # Parse the JSON content
+        questions_json = json.loads(content)
+    except json.JSONDecodeError as e:
+        st.error(f"Failed to parse JSON: {e}")
+        return []
 
     # Convert the JSON structure to the desired format
     parsed_questions = []
@@ -120,7 +119,6 @@ def display_questions(parsed_questions):
                 st.write("Oops! That's not correct. 😞")
                 st.write(q['explanation'])
 
-               
 def get_content_from_pdf(uploaded_file):
     """Extract content from the uploaded PDF."""
     pdf = PdfReader(uploaded_file)
@@ -139,7 +137,6 @@ def chatbot_page():
 
     input_method = st.selectbox('Choose input method:', ['Text Input', 'File Upload'])
 
-    # Move the number input widget here so it is displayed for both input methods
     num_questions = st.number_input('Number of Questions:', min_value=1, max_value=50, value=5, step=1, key='num_questions_chatbot_page')
 
     if input_method == 'File Upload':
@@ -152,11 +149,9 @@ def chatbot_page():
                 user_input = get_content_from_json(uploaded_file)
         else:
             user_input = None
-
     else:
-        user_input = get_user_input(num_questions)  # Pass num_questions as an argument
+        user_input = get_user_input(num_questions)
 
-    # Incorporate the number of questions into the user input for the 'File Upload' method
     if user_input and input_method == 'File Upload':
         fixed_prompt = """
         Based on the provided information, please generate {num_questions} multiple choice questions in the specified JSON format:
@@ -180,35 +175,28 @@ def chatbot_page():
         """
         user_input = fixed_prompt.format(num_questions=num_questions) + user_input
 
-    if user_input:
-        response_content = chat_with_gpt(user_input)
-        st.session_state.response_content = response_content
+    if st.button('Generate Questions'):  # New line to add a button
+        if user_input:
+            response_content = chat_with_gpt(user_input)
+            st.session_state.response_content = response_content
 
-def multiple_choice_questions_page():
+    # Parsing and displaying questions right after the chat_with_gpt function
     if st.session_state.response_content:
         parsed_questions = parse_content(st.session_state.response_content)
-        st.write(f"Number of parsed questions: {len(parsed_questions)}")  # Display the number of parsed questions
+        st.write(f"Number of parsed questions: {len(parsed_questions)}")
         display_questions(parsed_questions)
     else:
         st.warning("Please chat with OpenAI first to generate questions.")
 
+    if st.button("Reload page"):
+        streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 def main():
     load_environment()
     initialize_streamlit()
 
-    # Dictionary to map page names to functions
-    page_function_dict = {
-        "Chat with OpenAI": chatbot_page,
-        "Multiple Choice Questions": multiple_choice_questions_page
-    }
-
-    # Sidebar select box for user to choose page
-    page_choice = st.sidebar.selectbox(
-        "Choose a Page", list(page_function_dict.keys()), key='page_select')
-
-    # Execute the function corresponding to user's choice
-    page_function_dict[page_choice]()
+    # Call chatbot_page directly since there's only one page now
+    chatbot_page()
 
 if __name__ == "__main__":
     main()

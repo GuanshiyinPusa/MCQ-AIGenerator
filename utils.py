@@ -2,21 +2,6 @@ import streamlit as st
 from PyPDF2 import PdfReader
 import openai
 import json
-import os
-from dotenv import load_dotenv
-
-def load_environment():
-    load_dotenv()
-    openai.api_key = os.environ["OPENAI_API_KEY"]
-
-def initialize_streamlit():
-    st.title("Quiz Generator🤖")
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "model" not in st.session_state:
-        st.session_state.model = "gpt-3.5-turbo"
-    if "response_content" not in st.session_state:
-        st.session_state.response_content = ""
 
 def display_previous_messages():
     for message in st.session_state["messages"]:
@@ -132,70 +117,3 @@ def get_content_from_json(uploaded_file):
     """Extract content from the uploaded JSON file."""
     content = json.load(uploaded_file)
     return json.dumps(content)
-
-def chatbot_page():
-    # Comment out or remove the following line
-    # display_previous_messages()
-
-    input_method = st.selectbox('Choose input method:', ['Text Input', 'File Upload'])
-
-    num_questions = st.number_input('Number of Questions:', min_value=1, max_value=50, value=5, step=1, key='num_questions_chatbot_page')
-
-    if input_method == 'File Upload':
-        uploaded_file = st.file_uploader("Upload a PDF or JSON", type=["pdf", "json"])
-
-        if uploaded_file:
-            if uploaded_file.type == "application/pdf":
-                user_input = get_content_from_pdf(uploaded_file)
-            elif uploaded_file.type == "application/json":
-                user_input = get_content_from_json(uploaded_file)
-        else:
-            user_input = None
-    else:
-        user_input = get_user_input(num_questions)
-
-    if user_input and input_method == 'File Upload':
-        fixed_prompt = """
-        Based on the provided information, please generate {num_questions} multiple choice questions in the specified JSON format:
-
-        Format:
-        [{{  # <-- notice the double curly braces
-            "question": "Sample question?",
-            "options": {{
-                "A": "Option A",
-                "B": "Option B",
-                "C": "Option C",
-                "D": "Option D"
-            }},
-            "correct_answer": "A) Option A",
-            "explanation": "Explanation for the correct answer."
-        }},
-            ...
-        ]
-
-        Provided Information:
-        """
-        user_input = fixed_prompt.format(num_questions=num_questions) + user_input
-
-    if st.button('Generate Questions'):  # New line to add a button
-        if user_input:
-            response_content = chat_with_gpt(user_input)
-            st.session_state.response_content = response_content
-
-    # Parsing and displaying questions right after the chat_with_gpt function
-    if st.session_state.response_content:
-        parsed_questions = parse_content(st.session_state.response_content)
-        st.write(f"Number of parsed questions: {len(parsed_questions)}")
-        display_questions(parsed_questions)
-    else:
-        st.warning("Please chat with OpenAI first to generate questions.")
-
-def main():
-    load_environment()
-    initialize_streamlit()
-
-    # Call chatbot_page directly since there's only one page now
-    chatbot_page()
-
-if __name__ == "__main__":
-    main()
