@@ -1,4 +1,7 @@
-Run this to install everything. All the packages are the latest.
+install latest python 3.11.6
+from microsoft store(recommended) or python online website.
+
+Run this to install every package. All the packages are the latest.
 ```
 pip install -r requirements.txt
 ```
