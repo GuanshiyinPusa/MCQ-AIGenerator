@@ -12,7 +12,7 @@ def initialize_streamlit():
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "model" not in st.session_state:
-        st.session_state.model = "gpt-3.5-turbo"
+        st.session_state.model = "gpt-3.5-turbo-16k"
     if "response_content" not in st.session_state:
         st.session_state.response_content = ""
 
