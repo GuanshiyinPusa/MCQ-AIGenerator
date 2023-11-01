@@ -4,9 +4,9 @@
 #### 2. Install VSCode
 > https://code.visualstudio.com/download
 
-#### 3.Unzip "Project-RR.zip".
+#### 3.Unzip "MCQ-AIGenerator.zip", add your api-key to secrets.toml under .streamlit
 
-#### 4.Drag Folder "Project-RR" to VSCode to open it in VsCode.
+#### 4.Drag Folder "MCQ-AIGenerator" to VSCode to open it in VsCode.
 
 #### 5. Inside VSCode, Open Terminal from the Menu at the top
 ![Alt text](image.png)
